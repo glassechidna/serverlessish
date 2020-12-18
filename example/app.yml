@@ -1,0 +1,24 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Image:
+    Type: String
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: live
+      PackageType: Image
+      MemorySize: 2000
+      Timeout: 30
+      ImageUri: !Ref Image
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            PayloadFormatVersion: "1.0"
+            TimeoutInMillis: 20000
+Outputs:
+  Function:
+    Value: !Ref Function
+  ApiUrl:
+    Value: !Sub https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com
