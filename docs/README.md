@@ -24,6 +24,6 @@ More documentation.
 
 **Story time**: Christmas came early in 2020 with the release of [container image support for AWS Lambda][blog]. It 
 meant that  serverless applications could now be packaged in standard Docker images rather than Lambda-specific ZIP 
-files.  Additionally, the 50 MB limit for ZIP files doesn't apply to containers: they can be as enormous as 10 GB.
+files.  Additionally, the 250 MB limit for ZIP files doesn't apply to containers: they can be as enormous as 10 GB.
 
 [blog]: https://aws.amazon.com/blogs/aws/new-for-aws-lambda-container-image-support/
