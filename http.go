@@ -43,16 +43,10 @@ func lambdaResponseForHttpResponse(resp *http.Response) (*httpResponseOutput, er
 
 	encoded := base64.StdEncoding.EncodeToString(body)
 
-	headers := map[string]string{}
-	for name, values := range resp.Header {
-		headers[name] = values[0]
-	}
-
 	output := &httpResponseOutput{
 		StatusCode:        resp.StatusCode,
 		StatusDescription: resp.Status,
 		HeadersMV:         resp.Header,
-		Headers:           headers,
 		Body:              encoded,
 		IsBase64Encoded:   true,
 	}
