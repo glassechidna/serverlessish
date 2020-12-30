@@ -8,7 +8,7 @@ and everywhere else and adds less than 2 MB**.
 
 Those lines for copy-paste friendliness:
 
-```
+```Dockerfile
 FROM public.ecr.aws/c2t6n2x5/serverlessish:1 AS lh
 # FROM ...
 COPY --from=lh /opt/extensions/serverlessish /opt/extensions/serverlessish
