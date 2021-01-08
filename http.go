@@ -18,8 +18,8 @@ import (
 type httpResponseOutput struct {
 	StatusCode        int                 `json:"statusCode"`
 	StatusDescription string              `json:"statusDescription"`
-	Headers           map[string]string   `json:"headers"`
-	HeadersMV         map[string][]string `json:"multiValueHeaders"`
+	Headers           map[string]string   `json:"headers,omitempty"`
+	HeadersMV         map[string][]string `json:"multiValueHeaders,omitempty"`
 	Body              string              `json:"body"`
 	IsBase64Encoded   bool                `json:"isBase64Encoded"`
 }
@@ -27,15 +27,20 @@ type httpResponseOutput struct {
 type httpRequestInput struct {
 	HTTPMethod      string              `json:"httpMethod"`
 	Path            string              `json:"path"`
-	Headers         map[string]string   `json:"headers"`
-	HeadersMV       map[string][]string `json:"multiValueHeaders"`
+	Headers         map[string]string   `json:"headers,omitempty"`
+	HeadersMV       map[string][]string `json:"multiValueHeaders,omitempty"`
 	Query           map[string]string   `json:"queryStringParameters"`
 	QueryMV         map[string][]string `json:"multiValueQueryStringParameters"`
 	Body            string              `json:"body"`
 	IsBase64Encoded *bool               `json:"isBase64Encoded,omitempty"`
+	RequestContext  struct {
+		Elb struct {
+			TargetGroupArn string `json:"targetGroupArn"`
+		} `json:"elb"`
+	} `json:"requestContext"`
 }
 
-func lambdaResponseForHttpResponse(resp *http.Response) (*httpResponseOutput, error) {
+func lambdaResponseForHttpResponse(input *lambdaruntime.FunctionNextOutput, resp *http.Response) (*httpResponseOutput, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -43,18 +48,28 @@ func lambdaResponseForHttpResponse(resp *http.Response) (*httpResponseOutput, er
 
 	encoded := base64.StdEncoding.EncodeToString(body)
 
-	headers := map[string]string{}
-	for name, values := range resp.Header {
-		headers[name] = values[0]
+	hrInput := &httpRequestInput{}
+	err = json.Unmarshal(input.Body, &hrInput)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	output := &httpResponseOutput{
 		StatusCode:        resp.StatusCode,
 		StatusDescription: resp.Status,
-		HeadersMV:         resp.Header,
-		Headers:           headers,
 		Body:              encoded,
 		IsBase64Encoded:   true,
+	}
+
+	isSingleValuedHeadersALB := len(hrInput.RequestContext.Elb.TargetGroupArn) > 0 && hrInput.HeadersMV == nil
+
+	if isSingleValuedHeadersALB {
+		output.Headers = map[string]string{}
+		for name, values := range resp.Header {
+			output.Headers[name] = values[0]
+		}
+	} else {
+		output.HeadersMV = resp.Header
 	}
 
 	return output, nil

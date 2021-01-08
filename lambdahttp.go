@@ -65,7 +65,7 @@ func main() {
 			var responseBody []byte
 
 			if isHttpRequest {
-				lambdaResp, err := lambdaResponseForHttpResponse(funcResp)
+				lambdaResp, err := lambdaResponseForHttpResponse(next, funcResp)
 				if err != nil {
 				    return errors.WithStack(err)
 				}
