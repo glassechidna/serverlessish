@@ -10,10 +10,11 @@ import (
 )
 
 func waitForHealthy(ctx context.Context, port string) {
-	path := strings.TrimPrefix(os.Getenv("LH_HEALTHCHECK_PATH"), "/")
+	path := os.Getenv("LH_HEALTHCHECK_PATH")
 	if path == "" {
-		path = "ping"
+		path = "/ping"
 	}
+	path = strings.TrimPrefix(path, "/")
 
 	url := fmt.Sprintf("http://127.0.0.1:%s/%s", port, path)
 
