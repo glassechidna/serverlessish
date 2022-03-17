@@ -17,7 +17,7 @@ import (
 
 type httpResponseOutput struct {
 	StatusCode        int                 `json:"statusCode"`
-	StatusDescription string              `json:"statusDescription"`
+	StatusDescription string              `json:"statusDescription,omitempty"`
 	Headers           map[string]string   `json:"headers,omitempty"`
 	HeadersMV         map[string][]string `json:"multiValueHeaders,omitempty"`
 	Body              string              `json:"body"`
@@ -55,13 +55,17 @@ func lambdaResponseForHttpResponse(input *lambdaruntime.FunctionNextOutput, resp
 	}
 
 	output := &httpResponseOutput{
-		StatusCode:        resp.StatusCode,
-		StatusDescription: resp.Status,
-		Body:              encoded,
-		IsBase64Encoded:   true,
+		StatusCode:      resp.StatusCode,
+		Body:            encoded,
+		IsBase64Encoded: true,
 	}
 
-	isSingleValuedHeadersALB := len(hrInput.RequestContext.Elb.TargetGroupArn) > 0 && hrInput.HeadersMV == nil
+	isALB := len(hrInput.RequestContext.Elb.TargetGroupArn) > 0
+	if isALB {
+		output.StatusDescription = resp.Status
+	}
+
+	isSingleValuedHeadersALB := isALB && hrInput.HeadersMV == nil
 
 	if isSingleValuedHeadersALB {
 		output.Headers = map[string]string{}
@@ -93,7 +97,7 @@ func httpRequestForLambdaInvocation(input *lambdaruntime.FunctionNextOutput, por
 			path = "invoke"
 		}
 
-  		req, _ = http.NewRequest("POST", fmt.Sprintf("%s/%s", base, path), bytes.NewReader(input.Body))
+		req, _ = http.NewRequest("POST", fmt.Sprintf("%s/%s", base, path), bytes.NewReader(input.Body))
 	} else {
 		isHttpRequest = true
 		var body io.Reader = strings.NewReader(hrInput.Body)
